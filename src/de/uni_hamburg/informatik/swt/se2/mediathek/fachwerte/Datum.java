@@ -35,7 +35,7 @@ public final class Datum implements Comparable<Datum>
     static
     {
         CALENDAR.setLenient(false);
-        //CALENDAR.setTimeZone(TimeZone.getTimeZone("GMT"));
+        CALENDAR.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     /**
