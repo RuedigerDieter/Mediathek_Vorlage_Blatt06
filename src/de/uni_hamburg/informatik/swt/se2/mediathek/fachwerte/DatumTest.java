@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-//public class DatumTest
+public class DatumTest
 {
     @Test
     public void testeCompareTo()
