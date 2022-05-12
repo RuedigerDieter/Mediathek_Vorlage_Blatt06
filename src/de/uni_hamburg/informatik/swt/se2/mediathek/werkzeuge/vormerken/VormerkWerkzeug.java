@@ -25,7 +25,7 @@ import de.uni_hamburg.informatik.swt.se2.mediathek.werkzeuge.subwerkzeuge.vormer
  * @author SE2-Team
  * @version SoSe 2021
  */
-public class VormerkWerkzeug
+//public class VormerkWerkzeug
 {
 
     /**
