@@ -8,6 +8,7 @@ import java.util.Map;
 import de.uni_hamburg.informatik.swt.se2.mediathek.fachwerte.Datum;
 import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Kunde;
 import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Verleihkarte;
+import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Vormerkkarte;
 import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.medien.Medium;
 import de.uni_hamburg.informatik.swt.se2.mediathek.services.AbstractObservableService;
 import de.uni_hamburg.informatik.swt.se2.mediathek.services.kundenstamm.KundenstammService;
@@ -30,6 +31,7 @@ public class VerleihServiceImpl extends AbstractObservableService
      */
     private Map<Medium, Verleihkarte> _verleihkarten;
 
+    private Map<Medium, List<Vormerkkarte>> _vormerkkarten;
     /**
      * Der Medienbestand.
      */
@@ -66,6 +68,12 @@ public class VerleihServiceImpl extends AbstractObservableService
         _verleihkarten = erzeugeVerleihkartenBestand(initialBestand);
         _kundenstamm = kundenstamm;
         _medienbestand = medienbestand;
+        //initialisiere leere Map mit Key-Value Paar für jedes Medium im Bestand
+        _vormerkkarten = new HashMap<Medium, List<Vormerkkarte>>();
+        for(Medium medium : medienbestand.getMedien())
+        {
+            _vormerkkarten.put(medium, new ArrayList<Vormerkkarte>());
+        }
         _protokollierer = new VerleihProtokollierer();
     }
 
@@ -104,8 +112,11 @@ public class VerleihServiceImpl extends AbstractObservableService
                 kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
         assert medienImBestand(
                 medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+        
+        return sindAlleNichtVerliehen(medien) && (sindAlleNichtVorgemerkt(medien) 
+                || istFuerAlleErstvormerker(kunde, medien));
 
-        return sindAlleNichtVerliehen(medien);
+        //return sindAlleNichtVerliehen(medien);
     }
 
     @Override
@@ -201,7 +212,9 @@ public class VerleihServiceImpl extends AbstractObservableService
         assert ausleihDatum != null : "Vorbedingung verletzt: ausleihDatum != null";
         assert istVerleihenMoeglich(kunde,
                 medien) : "Vorbedingung verletzt:  istVerleihenMoeglich(kunde, medien)";
-
+//        assert (sindAlleNichtVorgemerkt(medien) || istFuerAlleErstvormerker(kunde, medien))  : 
+//            "Vorbedingung verletzt: (sindAlleNichtVorgemerkt(medien) || istFuerAlleErstvormerker(kunde, medien))";
+        
         for (Medium medium : medien)
         {
             Verleihkarte verleihkarte = new Verleihkarte(kunde, medium,
@@ -210,6 +223,10 @@ public class VerleihServiceImpl extends AbstractObservableService
             _verleihkarten.put(medium, verleihkarte);
             _protokollierer.protokolliere(
                     VerleihProtokollierer.EREIGNIS_AUSLEIHE, verleihkarte);
+            if (istVorgemerkt(medium))
+            {
+                loescheVormerkkarte(medium, ausleihDatum, kunde);
+            }
         }
         // Was passiert wenn das Protokollieren mitten in der Schleife
         // schief geht? informiereUeberAenderung in einen finally Block?
@@ -296,5 +313,262 @@ public class VerleihServiceImpl extends AbstractObservableService
         }
         return result;
     }
+
+    @Override
+    public void merkeVor(Kunde kunde, List<Medium> medien, Datum vormerkDatum)
+            throws ProtokollierException
+    {
+        assert kundeImBestand(kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
+        assert medienImBestand(medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+        assert vormerkDatum != null : "Vorbedingung verletzt: vormerkDatum ist null";
+        assert istVormerkenMoeglich(kunde, medien) : "Vorbedingung verletzt:  istVormerkenMoeglich(kunde, medien)";
+        
+        for (Medium medium : medien)
+        {
+            Vormerkkarte vormerkkarte = new Vormerkkarte(kunde, medium,
+                    vormerkDatum);
+
+            _vormerkkarten.get(medium).add(vormerkkarte);
+            _protokollierer.protokolliere(
+                    VerleihProtokollierer.EREIGNIS_VORMERKUNG, vormerkkarte);
+        }
+        informiereUeberAenderung();
+    }
+
+    @Override
+    public boolean istVormerkenMoeglich(Kunde kunde, List<Medium> medien)
+    {
+        assert kundeImBestand(kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
+        assert medienImBestand(medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+        
+        for (Medium medium : medien)
+        {
+            //TODO ggf. weitere Methode istAlleVormerkenMoeglich einfügen, da hier sonst wegen einer einzigen vorhandenen
+            //Vormerkung des Kunden der Prozess nicht durchführbar ist, evtl. unschön
+            if (istVorgemerktVon(kunde, medium) || getVormerkkartenFuer(medium).size() >= 3
+                    || istVerliehenAn(kunde, medium))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    @Override
+    public List<Vormerkkarte> getVormerkkartenFuer(Medium medium)
+    {
+        return _vormerkkarten.get(medium);
+    }
+
+    @Override
+    public List<Kunde> getVormerkerFuer(Medium medium)
+    {
+        List<Kunde> result = new ArrayList<Kunde>();
+        for (Vormerkkarte karte : _vormerkkarten.get(medium))
+        {
+            result.add(karte.getVormerker());
+        }
+        return result;
+    }
+
+    @Override
+    public List<Medium> getVorgemerkteMedienFuer(Kunde kunde)
+    {
+        assert kundeImBestand(kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
+        
+        List<Medium> result = new ArrayList<Medium>();
+        for (List<Vormerkkarte> liste : _vormerkkarten.values())
+        {
+            for (Vormerkkarte karte : liste)
+            {
+                if (karte.getVormerker().equals(kunde))
+                {
+                    result.add(karte.getMedium());
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public List<Vormerkkarte> getAlleVormerkkarten()
+    {
+        List<Vormerkkarte> result = new ArrayList<Vormerkkarte>();
+        for (List<Vormerkkarte> liste : _vormerkkarten.values())
+        {
+            result.addAll(liste);
+            //TODO alternativ:
+//            for(Vormerkkarte karte : liste)
+//            {
+//                result.add(karte);
+//            }
+        }
+        return result;
+    }
+
+    @Override
+    public void loescheVormerkkarten(List<Medium> medien, Datum loeschDatum,
+            Kunde kunde) throws ProtokollierException
+    {
+        assert sindAlleVorgemerktVon(kunde, medien) : "Vorbedingung verletzt: sindAlleVorgemerktVon(kunde,";
+        assert loeschDatum != null : "Vorbedingung verletzt: loeschDatum ist null";
+        
+        for (Medium medium : medien)
+        {
+            loescheVormerkkarte(medium, loeschDatum, kunde);
+        }
+        informiereUeberAenderung();        
+    }
+    
+    @Override
+    public void loescheVormerkkarte(Medium medium, Datum loeschDatum, Kunde kunde)
+        throws ProtokollierException
+        {
+            assert istVorgemerktVon(kunde, medium) : "Vorbedingung verletzt: istVorgemerktVon(kunde, medium)";
+            
+            Vormerkkarte karte = getVormerkkarteFuerKundeUndMedium(kunde, medium);
+            _vormerkkarten.get(medium).remove(getVormerkkarteFuerKundeUndMedium(kunde, medium));
+            _protokollierer.protokolliere(VerleihProtokollierer.EREIGNIS_VORMERKUNGENTFERNT, karte);
+        }
+
+    @Override
+    public boolean istVorgemerkt(Medium medium)
+    {
+        assert mediumImBestand(medium) : "Vorbedingung verletzt: mediumImBestand(medium)";
+        
+        if (_vormerkkarten.get(medium).size() > 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean sindAlleNichtVorgemerkt(List<Medium> medien)
+    {
+        assert medienImBestand(medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+        
+        boolean result = true;
+        
+        for (Medium medium : medien)
+        {
+            if (istVorgemerkt(medium))
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean sindAlleVorgemerkt(List<Medium> medien)
+    {
+        assert medienImBestand(medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+
+        boolean result = true;
+        for (Medium medium : medien)
+        {
+            if (!istVorgemerkt(medium))
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean sindAlleVorgemerktVon(Kunde kunde, List<Medium> medien)
+    {
+        assert medienImBestand(medien) : "Vorbedingung verletzt: medienImBestand(medien)";
+        assert kundeImBestand(kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
+        
+        boolean result = true;
+        for (Medium medium : medien)
+        {
+            if (!istVorgemerktVon(kunde, medium))
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean istVorgemerktVon(Kunde kunde, Medium medium)
+    {
+        assert kundeImBestand(kunde) : "Vorbedingung verletzt: kundeImBestand(kunde)";
+        assert mediumImBestand(medium) : "Vorbedingung verletzt: mediumImBestand(medium)";
+        
+        for (Kunde vkunde : getVormerkerFuer(medium))
+        {
+            if (vkunde.equals(kunde))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean istErstvormerker(Kunde kunde, Medium medium)
+    {
+        assert medium != null : "Vorbedingung verletzt: medium ist null";
+        assert kunde != null : "Vorbedingung verletzt: kunde ist null";
+        
+        if (!istVorgemerktVon(kunde, medium))
+        {
+            return false;
+        }
+        if (_vormerkkarten.get(medium).get(0).equals(getVormerkkarteFuerKundeUndMedium(kunde, medium)))
+        {
+            return true;
+        }
+        return false;
+        //nicht möglich, da Datum nur Tagesvergleich anstellt, zu ungenau, wenn mehrere Kunden
+        //an einem Tag dasselbe Medium vormerken:
+//        Vormerkkarte karte = getVormerkkarteFuerKundeUndMedium(kunde, medium);
+//        for (Vormerkkarte vergleichkarte : _vormerkkarten.get(medium))
+//        {
+//            karte.getVormerkdatum().super.compareTo(vergleichkarte.getVormerkdatum());
+//        }
+    }
+
+    @Override
+    public Vormerkkarte getVormerkkarteFuerKundeUndMedium(Kunde kunde,
+            Medium medium)
+    {
+        assert istVorgemerktVon(kunde, medium) : "Vorbedingung verletzt: istVorgemerktVon(kunde, medium)";
+        
+        //muss initialisiert werden, Überschreibung result = karte ist jedoch durch Vorbedingung gesichert
+        Vormerkkarte result = new Vormerkkarte(kunde, medium, Datum.heute());
+        for (Vormerkkarte karte : _vormerkkarten.get(medium))
+        {
+            if (karte.getVormerker().equals(kunde)) 
+            {
+                result = karte;
+                break;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean istFuerAlleErstvormerker(Kunde kunde, List<Medium> medien)
+    {
+        assert medien != null : "Vorbedingung verletzt: medien ist null";
+        assert kunde != null : "Vorbedingung verletzt: kunde ist null";
+        
+        for (Medium medium : medien)
+        {
+            if (!istErstvormerker(kunde, medium))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    
 
 }
