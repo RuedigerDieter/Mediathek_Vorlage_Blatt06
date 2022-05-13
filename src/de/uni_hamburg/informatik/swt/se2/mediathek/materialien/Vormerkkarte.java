@@ -79,7 +79,7 @@ public class Vormerkkarte
     public String getFormatiertenString()
     {
         return _medium.getFormatiertenString() + "am "
-                + _vormerkdatum.toString() + " verliehen an\n"
+                + _vormerkdatum.toString() + " vorgemerkt von\n"
                 + _vormerker.getFormatiertenString();
     }
 

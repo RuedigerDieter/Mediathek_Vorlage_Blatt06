@@ -255,16 +255,24 @@ import de.uni_hamburg.informatik.swt.se2.mediathek.werkzeuge.subwerkzeuge.vormer
         // TODO für Aufgabenblatt 6 (nicht löschen): Prüfung muss noch eingebaut
         // werden. Ist dies korrekt imlpementiert, wird der Vormerk-Button gemäß
         // der Anforderungen a), b), c) und e) aktiviert. Note:erledigt, siehe hier:
-        boolean vormerkenMoeglich = (_verleihService.istVormerkenMoeglich(kunde, medien));
+        boolean vormerkenMoeglich = (kunde != null) && !medien.isEmpty() && 
+                (_verleihService.istVormerkenMoeglich(kunde, medien));
 
         return vormerkenMoeglich;
     }
     
+    /**
+     * Überprüft, ob alle ausgewählten Medien von dem ausgewählten Kunden
+     * vorgemerkt sind.
+     * @return true, wenn alle vorgemerkt sind,
+     *  false, sonst
+     */
     private boolean sindAlleVorgemerktVon()
     {
         List<Medium> medien = _medienAuflisterWerkzeug.getSelectedMedien();
         Kunde kunde = _kundenAuflisterWerkzeug.getSelectedKunde();
-        boolean sindAlleVorgemerktVon = (_verleihService.sindAlleVorgemerktVon(kunde, medien));
+        boolean sindAlleVorgemerktVon = (kunde != null) && !medien.isEmpty() && 
+                _verleihService.sindAlleVorgemerktVon(kunde, medien);
 
         return sindAlleVorgemerktVon;
     }
@@ -360,7 +368,7 @@ import de.uni_hamburg.informatik.swt.se2.mediathek.werkzeuge.subwerkzeuge.vormer
     private void aktualisiereVormerkungLoeschenButton()
     {
         boolean sindAlleVorgemerktVon = sindAlleVorgemerktVon();
-        _vormerkUI.getVormerkenButton()
+        _vormerkUI.getVormerkungLoeschenButton()
             .setEnabled(sindAlleVorgemerktVon);
     }
 
