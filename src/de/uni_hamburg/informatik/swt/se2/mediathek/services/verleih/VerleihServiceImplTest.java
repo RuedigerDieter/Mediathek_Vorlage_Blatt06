@@ -32,6 +32,9 @@ public class VerleihServiceImplTest
     private VerleihService _service;
     private List<Medium> _medienListe;
     private Kunde _vormerkkunde;
+    private Kunde _vormerkkunde2;
+    private Kunde _vormerkkunde3;
+    private Kunde _vormerkkunde4;
 
     public VerleihServiceImplTest()
     {
@@ -41,6 +44,9 @@ public class VerleihServiceImplTest
         _kunde = new Kunde(new Kundennummer(123456), "ich", "du");
 
         _vormerkkunde = new Kunde(new Kundennummer(666999), "paul", "panter");
+        _vormerkkunde2 = new Kunde(new Kundennummer(666998), "paula", "panter");
+        _vormerkkunde3 = new Kunde(new Kundennummer(666997), "pauli", "panter");
+        _vormerkkunde4 = new Kunde(new Kundennummer(666996), "paule", "panter");
 
         kundenstamm.fuegeKundenEin(_kunde);
         kundenstamm.fuegeKundenEin(_vormerkkunde);
@@ -60,15 +66,106 @@ public class VerleihServiceImplTest
     }
 
     @Test
-    public void testeNachInitialisierungIstNichtsVerliehen() throws Exception
+    public void testeNachInitialisierungIstNichtsVerliehenOderVorgemerkt() throws Exception
     {
         assertTrue(_service.getVerleihkarten()
             .isEmpty());
         assertFalse(_service.istVerliehen(_medienListe.get(0)));
         assertFalse(_service.sindAlleVerliehen(_medienListe));
         assertTrue(_service.sindAlleNichtVerliehen(_medienListe));
+        assertTrue(_service.getVormerkkarten().isEmpty());
+        assertFalse(_service.istVorgemerkt(_medienListe.get(0)));
+        assertFalse(_service.sindAlleVorgemerkt(_medienListe));
+        assertTrue(_service.sindAlleNichtVorgemerkt(_medienListe));
     }
 
+    @Test
+    public void testeVormerkenUndLoeschenVonVormerkung()
+    {
+        //Legt eine Liste mit vorgemerkten und eine mit nicht vorgemerkten Medien an.
+        List<Medium> vorgemerkteMedien = _medienListe.subList(0, 2);
+        List<Medium> nichtVorgemerkteMedien = _medienListe.subList(2, 4);
+        _service.merkeVor(_vormerkkunde, vorgemerkteMedien, _datum);
+        
+        // Prüfe, ob alle sondierenden Operationen für das Vertragsmodell
+        // funktionieren
+        assertTrue(_service.istVorgemerkt(vorgemerkteMedien.get(0)));
+        assertTrue(_service.istVorgemerkt(vorgemerkteMedien.get(1)));
+        assertFalse(_service.istVorgemerkt(nichtVorgemerkteMedien.get(0)));
+        assertFalse(_service.istVorgemerkt(nichtVorgemerkteMedien.get(1)));
+        assertTrue(_service.sindAlleVorgemerkt(vorgemerkteMedien));
+        assertTrue(_service.sindAlleNichtVorgemerkt(nichtVorgemerkteMedien));
+        assertFalse(_service.sindAlleNichtVorgemerkt(vorgemerkteMedien));
+        assertFalse(_service.sindAlleVorgemerkt(nichtVorgemerkteMedien));
+        assertFalse(_service.sindAlleVorgemerkt(_medienListe));
+        assertFalse(_service.sindAlleNichtVorgemerkt(_medienListe));
+        assertTrue(_service.istVorgemerktVon(_vormerkkunde, vorgemerkteMedien.get(0)));
+        assertTrue(_service.istVorgemerktVon(_vormerkkunde, vorgemerkteMedien.get(1)));
+        assertFalse(
+                _service.istVorgemerktVon(_vormerkkunde, nichtVorgemerkteMedien.get(0)));
+        assertFalse(
+                _service.istVorgemerktVon(_vormerkkunde, nichtVorgemerkteMedien.get(1)));
+        assertTrue(_service.sindAlleVorgemerktVon(_vormerkkunde, vorgemerkteMedien));
+        assertFalse(
+                _service.sindAlleVorgemerktVon(_vormerkkunde, nichtVorgemerkteMedien));
+        assertTrue(_service.istVormerkenMoeglich(_vormerkkunde2, vorgemerkteMedien));
+        assertTrue(_service.istVormerkenMoeglich(_vormerkkunde2, nichtVorgemerkteMedien));
+        assertFalse(_service.istVormerkenMoeglich(_vormerkkunde, vorgemerkteMedien));
+        assertFalse(_service.istVormerkenMoeglich(_vormerkkunde, _medienListe));
+        assertTrue(_service.istVormerkenMoeglich(_vormerkkunde, nichtVorgemerkteMedien));
+        
+        _service.merkeVor(_vormerkkunde2, vorgemerkteMedien);
+        _service.merkeVor(_vormerkkunde3, vorgemerkteMedien);
+        
+        // Prüft, ob bei drei bestehenden Vormerkungen für ein Medium noch weitere Kunden
+        // Vormerkungen anstellen können.
+        
+        assertFalse(_service.istVormerkenMoeglich(_vormerkkunde4, vorgemerkteMedien));
+            
+
+        // Prüfe alle sonstigen sondierenden Methoden
+        assertEquals(2, _service.getVormerkkarten().size());
+        
+        _service.loescheVormerkkarten(vorgemerkteMedien, _vormerkkunde);
+        _service.loescheVormerkkarten(vorgemerkteMedien, _vormerkkunde2);
+        _service.loescheVormerkkarten(vorgemerkteMedien, _vormerkkunde3);
+        
+        // Prüfe, ob alle sondierenden Operationen für das Vertragsmodell
+        // funktionieren
+        assertFalse(_service.istVorgemerkt(vorgemerkteMedien.get(0)));
+        assertFalse(_service.istVorgemerkt(vorgemerkteMedien.get(1)));
+        assertFalse(_service.istVorgemerkt(nichtVorgemerkteMedien.get(0)));
+        assertFalse(_service.istVorgemerkt(nichtVorgemerkteMedien.get(1)));
+        assertFalse(_service.sindAlleVorgemerkt(vorgemerkteMedien));
+        assertTrue(_service.sindAlleNichtVorgemerkt(nichtVorgemerkteMedien));
+        assertTrue(_service.sindAlleNichtVorgemerkt(vorgemerkteMedien));
+        assertFalse(_service.sindAlleVorgemerkt(nichtVorgemerkteMedien));
+        assertFalse(_service.sindAlleVorgemerkt(_medienListe));
+        assertTrue(_service.sindAlleNichtVorgemerkt(_medienListe));
+        assertTrue(_service.getVormerkkarten().isEmpty());
+        assertFalse(_service.sindAlleVorgemerktVon(_medienListe, _vormerkkunde));
+        assertFalse(_service.sindAlleVorgemerktVon(vorgemerkteMedien, _vormerkkunde));
+    }
+    
+    @Test
+    public void testeVormerkenUndAusleihenVonMedien() throws ProtokollierException
+    {
+        _service.verleiheAn(_kunde, _medienListe, _datum);
+        assertFalse(istVormerkenMoeglich(_kunde, _medienListe));
+        assertTrue(istVormerkenMoeglich(_vormerkkunde, _medienListe));
+        _service.nimmZurueck(_medienListe, _datum);
+        assertTrue(istVormerkenMoeglich(_kunde, _medienListe));
+        assertTrue(istVormerkenMoeglich(_vormerkkunde, _medienListe));
+        _service.merkeVor(_vormerkkunde, _medienListe, _datum);
+        _service.verleiheAn(_kunde, _medienListe, _datum);
+        //wenn der Kunde nicht der Vormerker ist, darf Medium nicht entliehen werden
+        assertFalse(_service.sindAlleVerliehen(_medienListe));
+        _service.verleiheAn(_vormerkkunde, _medienListe, _datum);
+        assertTrue(_service.sindAlleVerliehen(_medienListe));
+        
+        //TODO Tests bei mehreren Vormerkern, nur erster Vormerker darf entleihen
+    }
+    
     @Test
     public void testeVerleihUndRueckgabeVonMedien() throws Exception
     {
@@ -121,6 +218,7 @@ public class VerleihServiceImplTest
             .isEmpty());
     }
 
+    //TODO muss noch für Vormerkung erweitert werden
     @Test
     public void testVerleihEreignisBeobachter() throws ProtokollierException
     {

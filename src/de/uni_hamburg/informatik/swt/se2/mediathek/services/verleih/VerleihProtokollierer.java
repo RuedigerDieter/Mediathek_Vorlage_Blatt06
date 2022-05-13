@@ -7,6 +7,7 @@ import java.util.Calendar;
 import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Verleihkarte;
 
 /**
+ * TODO müssen Vormerkungen protokolliert werden?
  * Ein Verleihprotokollierer schreibt alle Verleihvorgänge in eine Datei.
  * 
  * @author SE2-Team
