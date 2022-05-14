@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.util.Calendar;
 
 import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Verleihkarte;
+import de.uni_hamburg.informatik.swt.se2.mediathek.materialien.Vormerkkarte;
 
 /**
+ * TODO müssen Vormerkungen protokolliert werden?
  * Ein Verleihprotokollierer schreibt alle Verleihvorgänge in eine Datei.
  * 
  * @author SE2-Team
@@ -28,6 +30,10 @@ class VerleihProtokollierer
      * Pfad der Datei, in die das Verleihprotokoll geschrieben wird
      */
     private static final String DATEIPFAD = "./verleihProtokoll.txt";
+    
+    public static final String EREIGNIS_VORMERKUNG = "Vormerkung";
+    
+    public static final String EREIGNIS_VORMERKUNGENTFERNT = "Vormerkung entfernt";
 
     /**
      * Schreibt eine übergebene Verleihkarte ins Protokoll.
@@ -54,6 +60,43 @@ class VerleihProtokollierer
             .getTime()
             .toString() + ": " + ereignis + "\n"
                 + verleihkarte.getFormatiertenString();
+
+        try (FileWriter writer = new FileWriter(DATEIPFAD, true))
+        {
+            writer.write(eintrag);
+        }
+        catch (IOException e)
+        {
+            throw new ProtokollierException(
+                    "Beim Schreiben des Verleihprotokolls ist ein Fehler aufgetreten.");
+        }
+    }
+    
+    /**
+     * Schreibt eine übergebene Vormerkkarte ins Protokoll.
+     * 
+     * @param ereignis Der Name des Vormerkereignis: mögliche Namen sind durch
+     *            die Konstanten EREIGNIS_VORMERKUNG und EREIGNIS_VORMERKUNGENTFERNT
+     *            definiert.
+     * @param vormerkkarte eine Vormerkkarte, die das vormerkereignis betrifft.
+     * 
+     * @require EREIGNIS_VORMERKUNG.equals(ereignis) ||
+     *          EREIGNIS_VORMERKUNGENTFERNT.equals(ereignis)
+     * @require vormerkkarte != null
+     * 
+     * @throws ProtokollierException wenn das Protokollieren nicht geklappt hat.
+     */
+    public void protokolliere(String ereignis, Vormerkkarte vormerkkarte)
+            throws ProtokollierException
+    {
+        assert EREIGNIS_VORMERKUNG.equals(ereignis) || EREIGNIS_VORMERKUNGENTFERNT.equals(
+                ereignis) : "Vorbedingung verletzt : EREIGNIS_VORMERKUNG.equals(ereignis) || EREIGNIS_VORMERKUNGENTFERNT.equals(ereignis)";
+        assert vormerkkarte != null : "Vorbedingung verletzt : vormerkkarte != null";
+
+        String eintrag = Calendar.getInstance()
+            .getTime()
+            .toString() + ": " + ereignis + "\n"
+                + vormerkkarte.getFormatiertenString();
 
         try (FileWriter writer = new FileWriter(DATEIPFAD, true))
         {

@@ -23,6 +23,7 @@ class VormerkUI
 {
     // UI-Komponenten
     private JButton _vormerkenButton;
+    private JButton _vormerkungLoeschenButton;
     private JPanel _ausleihePanel;
     private JSplitPane _auflisterSplitpane;
     private JPanel _anzeigerPanel;
@@ -122,7 +123,7 @@ class VormerkUI
         _ausleihePanel.setSize(240, -1);
         _ausleihePanel.setBackground(UIConstants.BACKGROUND_COLOR);
         erzeugeAnzeigerPanel();
-        erzeugeAusleihButton();
+        erzeugeVormerkButtons();
     }
 
     /**
@@ -141,9 +142,9 @@ class VormerkUI
     }
 
     /**
-     * Erzeugt den Ausleih-Button.
+     * Erzeugt die beiden-Buttons für die Vormerkungen.
      */
-    private void erzeugeAusleihButton()
+    private void erzeugeVormerkButtons()
     {
         JPanel _buttonPanel = new JPanel();
         _ausleihePanel.add(_buttonPanel, BorderLayout.SOUTH);
@@ -154,12 +155,20 @@ class VormerkUI
         _vormerkenButton = new JButton();
         _buttonPanel.add(_vormerkenButton);
         _vormerkenButton.setText("vormerken");
-        _vormerkenButton.setPreferredSize(new Dimension(140, 100));
+        _vormerkenButton.setPreferredSize(new Dimension(180, 50));
         _vormerkenButton.setSize(-1, -1);
         _vormerkenButton.setFont(UIConstants.BUTTON_FONT);
         _vormerkenButton.setEnabled(false);
+        
+        _vormerkungLoeschenButton = new JButton();
+        _buttonPanel.add(_vormerkungLoeschenButton);
+        _vormerkungLoeschenButton.setText("Vormerkung loeschen");
+        _vormerkungLoeschenButton.setPreferredSize(new Dimension(180, 50));
+        _vormerkungLoeschenButton.setSize(-1, -1);
+        _vormerkungLoeschenButton.setFont(UIConstants.BUTTON_FONT);
+        _vormerkungLoeschenButton.setEnabled(false);
     }
-
+    
     /**
      * Setzt die Größe einer übergebenen Widget-Komponente auf -1.
      */
@@ -177,6 +186,11 @@ class VormerkUI
     public JButton getVormerkenButton()
     {
         return _vormerkenButton;
+    }
+    
+    public JButton getVormerkungLoeschenButton()
+    {
+        return _vormerkungLoeschenButton;
     }
 
     /**
