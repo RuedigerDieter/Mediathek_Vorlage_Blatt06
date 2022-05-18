@@ -349,9 +349,8 @@ import de.uni_hamburg.informatik.swt.se2.mediathek.werkzeuge.subwerkzeuge.vormer
      */
     private void aktualisiereVormerkButton()
     {
-        boolean istVormerkenMoeglich = istVormerkenMoeglich();
         _vormerkUI.getVormerkenButton()
-            .setEnabled(istVormerkenMoeglich);
+            .setEnabled(istVormerkenMoeglich());
     }
     
     /**
