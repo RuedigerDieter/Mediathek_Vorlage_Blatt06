@@ -30,9 +30,13 @@ class VerleihProtokollierer
      * Pfad der Datei, in die das Verleihprotokoll geschrieben wird
      */
     private static final String DATEIPFAD = "./verleihProtokoll.txt";
-    
+    /**
+     * Textrepräsentation für das Ereignis Vormerken
+     */
     public static final String EREIGNIS_VORMERKUNG = "Vormerkung";
-    
+    /**
+     * Textrepräsentation für das Ereignis Vormerken entfernen
+     */
     public static final String EREIGNIS_VORMERKUNGENTFERNT = "Vormerkung entfernt";
 
     /**
