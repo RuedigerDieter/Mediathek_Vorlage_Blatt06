@@ -296,3 +296,29 @@ am 18.5.2022 vorgemerkt von
     Anschrift:
     Abenteuerallee 33
     24104 Kiel
+Wed May 18 16:09:23 CEST 2022: Vormerkung
+CD:
+    Titel: Disturbia
+    Kommentar: gut
+    Interpret: Rihanna
+    Spiellänge: 90
+am 18.5.2022 vorgemerkt von
+    Kundennummer: 123459
+    Name: Julia Schmidt
+    Telefon: unbekannt
+    Anschrift:
+    Julianenallee22
+    24103 Kiel
+Wed May 18 16:09:28 CEST 2022: Vormerkung entfernt
+CD:
+    Titel: Disturbia
+    Kommentar: gut
+    Interpret: Rihanna
+    Spiellänge: 90
+am 18.5.2022 vorgemerkt von
+    Kundennummer: 123459
+    Name: Julia Schmidt
+    Telefon: unbekannt
+    Anschrift:
+    Julianenallee22
+    24103 Kiel

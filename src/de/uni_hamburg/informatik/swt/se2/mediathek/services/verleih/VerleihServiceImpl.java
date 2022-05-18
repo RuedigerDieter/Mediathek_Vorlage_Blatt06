@@ -31,6 +31,9 @@ public class VerleihServiceImpl extends AbstractObservableService
      */
     private Map<Medium, Verleihkarte> _verleihkarten;
 
+    /**
+     * Map, die alle Vormerkkarten einspeichert. Damit ist der Zugriff auf aktuellste Verleihkarte einfach möglich.
+     */
     private Map<Medium, List<Vormerkkarte>> _vormerkkarten;
     /**
      * Der Medienbestand.
@@ -69,14 +72,26 @@ public class VerleihServiceImpl extends AbstractObservableService
         _kundenstamm = kundenstamm;
         _medienbestand = medienbestand;
         //initialisiere leere Map mit Key-Value Paar für jedes Medium im Bestand
-        _vormerkkarten = new HashMap<Medium, List<Vormerkkarte>>();
-        for(Medium medium : medienbestand.getMedien())
-        {
-            _vormerkkarten.put(medium, new ArrayList<Vormerkkarte>());
-        }
+        _vormerkkarten = erzeugeVormerkkartenBestand();
         _protokollierer = new VerleihProtokollierer();
     }
 
+    /**
+     * Erzeugt eine Hashmap an Vormerkkarten aus dem Initialbestand
+     */
+    private HashMap<Medium,List<Vormerkkarte>> erzeugeVormerkkartenBestand()
+    {
+        HashMap<Medium,List<Vormerkkarte>> vormerkkarten = new HashMap<Medium,List<Vormerkkarte>>();
+        for(Medium medium : medienbestand.getMedien())
+        {
+            vormerkkarten.put(medium, new ArrayList<Vormerkkarte>());
+        }
+        return vormerkkarten;
+    }
+
+    {
+
+    }
     /**
      * Erzeugt eine neue HashMap aus dem Initialbestand.
      */
