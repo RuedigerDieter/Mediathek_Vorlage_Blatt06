@@ -584,6 +584,14 @@ public class VerleihServiceImpl extends AbstractObservableService
         return true;
     }
     
+    @Override
+    public Kunde getErstvormerkerFuer(Medium medium)
+    {
+        assert medium != null : "Vorbedingung verletzt: medium != null";
+        assert istVorgemerkt(medium) : "Vorbedingung verletzt: istVorgemerkt(medium)";
+        
+        return getVormerkerFuer(medium).get(0);
+    }
     
 
 }
