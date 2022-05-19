@@ -454,9 +454,6 @@ public interface VerleihService extends ObservableService
      *
      * @ensure result != null
      */
-    Kunde getErstvormerkerFuer(Medium medium)
-    {
-        return getVormerkerFuer(medium).get(0);
-    }
+    Kunde getErstvormerkerFuer(Medium medium);
 
 }
