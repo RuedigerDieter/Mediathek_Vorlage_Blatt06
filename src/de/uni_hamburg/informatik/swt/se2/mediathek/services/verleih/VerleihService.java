@@ -443,5 +443,20 @@ public interface VerleihService extends ObservableService
      * @ensure result != null
      */
     Vormerkkarte getVormerkkarteFuerKundeUndMedium (Kunde kunde, Medium medium);
+    
+    /**
+     * Gibt den Kunden aus, welcher am längsten für 
+     * das spezifizierte Medium als Vormerker registriert ist.
+     *
+     * @require medium != null
+     * @require istVorgemerkt(medium)
+     * @return der Erstvormerker
+     *
+     * @ensure result != null
+     */
+    Kunde getErstvormerkerFuer(Medium medium)
+    {
+        return getVormerkerFuer(medium).get(0);
+    }
 
 }
